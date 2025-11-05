@@ -367,7 +367,20 @@ void parse_pe(const char *filepath, int generate_dot)
             for (int i = 0; i < coff_header.NumberOfSections; i++) {
                 char name[9] = {0};
                 memcpy(name, sections[i].Name, 8);
-                fprintf(dot, "|{%s|0x%08x|%u}", name, sections[i].VirtualAddress, sections[i].VirtualSize);
+                
+                /* Escape special characters for DOT record labels */
+                fprintf(dot, "|{");
+                for (int j = 0; name[j] != '\0'; j++) {
+                    char c = name[j];
+                    if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                        fprintf(dot, "\\%c", c);
+                    } else if (c == ' ') {
+                        fprintf(dot, "\\ "); // Escape spaces
+                    } else {
+                        fprintf(dot, "%c", c);
+                    }
+                }
+                fprintf(dot, "|0x%08x|%u}", sections[i].VirtualAddress, sections[i].VirtualSize);
             }
             fprintf(dot, "}\"];\n\n");
             
@@ -409,7 +422,20 @@ void parse_pe(const char *filepath, int generate_dot)
                                         }
                                         uint16_t ord = ordinals[i];
                                         uint32_t func_rva = (ord < export_dir.NumberOfFunctions) ? func_addrs[ord] : 0;
-                                        fprintf(dot, "|{%s|0x%08x}", func_name, func_rva);
+                                        
+                                        /* Escape special characters in function names */
+                                        fprintf(dot, "|{");
+                                        for (int j = 0; func_name[j] != '\0'; j++) {
+                                            char c = func_name[j];
+                                            if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                                                fprintf(dot, "\\%c", c);
+                                            } else if (c == ' ') {
+                                                fprintf(dot, "\\ ");
+                                            } else {
+                                                fprintf(dot, "%c", c);
+                                            }
+                                        }
+                                        fprintf(dot, "|0x%08x}", func_rva);
                                     }
                                 }
                             }
@@ -462,7 +488,19 @@ void parse_pe(const char *filepath, int generate_dot)
                         }
                         
                         if (name[0] != '\0' && symbols[i].StorageClass == 2) {
-                            fprintf(dot, "|{%s|0x%08x}", name, symbols[i].Value);
+                            /* Escape special characters in symbol names */
+                            fprintf(dot, "|{");
+                            for (int j = 0; name[j] != '\0'; j++) {
+                                char c = name[j];
+                                if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                                    fprintf(dot, "\\%c", c);
+                                } else if (c == ' ') {
+                                    fprintf(dot, "\\ ");
+                                } else {
+                                    fprintf(dot, "%c", c);
+                                }
+                            }
+                            fprintf(dot, "|0x%08x}", symbols[i].Value);
                             count++;
                         }
                         i += symbols[i].NumberOfAuxSymbols;

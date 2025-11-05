@@ -130,7 +130,20 @@ static void parse_elf32(FILE *file, const char *filepath, int generate_dot)
             fprintf(dot, "  sections [label=\"{Sections");
             for (int i = 0; i < ehdr.e_shnum; i++) {
                 const char *name = shstrtab ? shstrtab + shdrs[i].sh_name : "unknown";
-                fprintf(dot, "|{%s|0x%08x|%u}", name, shdrs[i].sh_addr, shdrs[i].sh_size);
+                
+                /* Escape special characters for DOT record labels */
+                fprintf(dot, "|{");
+                for (int j = 0; name[j] != '\0'; j++) {
+                    char c = name[j];
+                    if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                        fprintf(dot, "\\%c", c);
+                    } else if (c == ' ') {
+                        fprintf(dot, "\\ ");
+                    } else {
+                        fprintf(dot, "%c", c);
+                    }
+                }
+                fprintf(dot, "|0x%08x|%u}", shdrs[i].sh_addr, shdrs[i].sh_size);
             }
             fprintf(dot, "}\"];\n\n");
             
@@ -168,7 +181,19 @@ static void parse_elf32(FILE *file, const char *filepath, int generate_dot)
                     else if (type == STT_OBJECT) type_str = "O";
                     else continue;
                     
-                    fprintf(dot, "|{%s|%s|0x%08x}", name, type_str, syms[j].st_value);
+                    /* Escape special characters in symbol names */
+                    fprintf(dot, "|{");
+                    for (int k = 0; name[k] != '\0'; k++) {
+                        char c = name[k];
+                        if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                            fprintf(dot, "\\%c", c);
+                        } else if (c == ' ') {
+                            fprintf(dot, "\\ ");
+                        } else {
+                            fprintf(dot, "%c", c);
+                        }
+                    }
+                    fprintf(dot, "|%s|0x%08x}", type_str, syms[j].st_value);
                 }
                 
                 fprintf(dot, "}\"];\n");
@@ -306,7 +331,20 @@ static void parse_elf64(FILE *file, const char *filepath, int generate_dot)
             fprintf(dot, "  sections [label=\"{Sections");
             for (int i = 0; i < ehdr.e_shnum; i++) {
                 const char *name = shstrtab ? shstrtab + shdrs[i].sh_name : "unknown";
-                fprintf(dot, "|{%s|0x%016lx|%lu}", name, shdrs[i].sh_addr, shdrs[i].sh_size);
+                
+                /* Escape special characters for DOT record labels */
+                fprintf(dot, "|{");
+                for (int j = 0; name[j] != '\0'; j++) {
+                    char c = name[j];
+                    if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                        fprintf(dot, "\\%c", c);
+                    } else if (c == ' ') {
+                        fprintf(dot, "\\ ");
+                    } else {
+                        fprintf(dot, "%c", c);
+                    }
+                }
+                fprintf(dot, "|0x%016lx|%lu}", shdrs[i].sh_addr, shdrs[i].sh_size);
             }
             fprintf(dot, "}\"];\n\n");
             
@@ -344,7 +382,19 @@ static void parse_elf64(FILE *file, const char *filepath, int generate_dot)
                     else if (type == STT_OBJECT) type_str = "O";
                     else continue;
                     
-                    fprintf(dot, "|{%s|%s|0x%016lx}", name, type_str, syms[j].st_value);
+                    /* Escape special characters in symbol names */
+                    fprintf(dot, "|{");
+                    for (int k = 0; name[k] != '\0'; k++) {
+                        char c = name[k];
+                        if (c == '|' || c == '{' || c == '}' || c == '<' || c == '>' || c == '"' || c == '\\') {
+                            fprintf(dot, "\\%c", c);
+                        } else if (c == ' ') {
+                            fprintf(dot, "\\ ");
+                        } else {
+                            fprintf(dot, "%c", c);
+                        }
+                    }
+                    fprintf(dot, "|%s|0x%016lx}", type_str, syms[j].st_value);
                 }
                 
                 fprintf(dot, "}\"];\n");
